@@ -23,6 +23,7 @@ public:
 	AMyCharacter();
 	UFUNCTION()
 	void Move(const FInputActionValue& Value);
+	void Look(const FInputActionValue& Value);
 
 protected:
 	// Called when the game starts or when spawned
@@ -38,6 +39,9 @@ protected:
 	// Jump Input Actions
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	TObjectPtr<UInputAction> JumpAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	TObjectPtr<UInputAction> LookAction;
 
 
 public:	
