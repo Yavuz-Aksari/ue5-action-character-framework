@@ -6,36 +6,52 @@
 #include "Camera/CameraComponent.h"
 #include "InputActionValue.h"
 #include "InputMappingContext.h"
+#include "GameFramework/SpringArmComponent.h"
+
+DEFINE_LOG_CATEGORY(GameLog);
 
 
-// Sets default values
 AMyCharacter::AMyCharacter()
 {
+
+	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
+	SpringArm->SetupAttachment(RootComponent); 
+	SpringArm->TargetArmLength = 400.0f; 
+	SpringArm->bUsePawnControlRotation = true;
+
+	ThirdPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("ThirdPersonCamera"));
+	ThirdPersonCamera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
+	ThirdPersonCamera->bUsePawnControlRotation = false;
+
+	bUseControllerRotationPitch = false;
+	bUseControllerRotationRoll = false;
+
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 }
 
-// Called when the game starts or when spawned
+
 void AMyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
 	check(GEngine != nullptr);
 
-	// Get the player controller for this character
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
-		// Get the enhanced input local player subsystem and add a new input mapping context to it
+
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
-			//input mapping context added to piority 0 so it is the default and the foundation
+			//input mapping context added to priority 0 so it is the foundation
 			Subsystem->AddMappingContext(InputMapping, 0);
-			UE_LOG(LogTemp, Warning, TEXT("IMC ADDED!"));
+			UE_LOG(GameLog, Log, TEXT("IMC succsesfully added."));
+			return;
 		}
+		UE_LOG(GameLog, Error, TEXT("InputMapping is null: assign IMC in Blueprint."));
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("CHAR SPAWNED!"));
+	UE_LOG(GameLog, Log, TEXT("Character Sucsessfully spawned."));
 	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("We are using MyCharacter."));
 
 
@@ -43,7 +59,7 @@ void AMyCharacter::BeginPlay()
 	
 }
 
-// Called every frame
+
 void AMyCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -57,14 +73,12 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		//bind move action
+	
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AMyCharacter::Move);
 
-		// Bind Jump Actions
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &AMyCharacter::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &AMyCharacter::StopJumping);
 
-		//bind look action
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMyCharacter::Look);
 
 	}
@@ -73,7 +87,6 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 void AMyCharacter::Move(const FInputActionValue& Value)
 {
 
-	// 2D Vector of movement values returned from the input action
 	const FVector2D MovementValue = Value.Get<FVector2D>();
 
 	if (Controller)

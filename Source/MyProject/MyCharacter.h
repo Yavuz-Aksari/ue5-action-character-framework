@@ -6,9 +6,14 @@
 #include "GameFramework/Character.h"
 #include "MyCharacter.generated.h"
 
+
+DECLARE_LOG_CATEGORY_EXTERN(GameLog, Log, All);
+
 class UInputMappingContext;
 class UInputAction;
 class UInputComponent;
+class USpringArmComponent;
+class UCameraComponent;
 
 // --- New Code End ---
 
@@ -29,19 +34,25 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	UPROPERTY(EditAnywhere, Category = Input)
+	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputMappingContext>InputMapping;
 
 	// Move Input Actions
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> MoveAction;
 
 	// Jump Input Actions
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> JumpAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> LookAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
+	TObjectPtr<USpringArmComponent> SpringArm;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
+	TObjectPtr<UCameraComponent> ThirdPersonCamera;
 
 
 public:	
