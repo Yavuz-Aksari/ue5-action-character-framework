@@ -1,6 +1,5 @@
-
-
 #include "MyCharacter.h"
+#include "MyProject.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h" 
 #include "Camera/CameraComponent.h"
@@ -9,7 +8,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
-DEFINE_LOG_CATEGORY(GameLog);
+
 
 
 AMyCharacter::AMyCharacter()
@@ -30,6 +29,7 @@ AMyCharacter::AMyCharacter()
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
+	GetCharacterMovement()->AirControl = 0.2f;
 
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -116,8 +116,18 @@ void AMyCharacter::Look(const FInputActionValue& Value) {
 		AddControllerYawInput(LookAxisValue.X);
 		AddControllerPitchInput(LookAxisValue.Y);
 	}
+}
 
+void AMyCharacter::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
 
+	UE_LOG(GameLog, Log, TEXT("Character Landed"));
+}
 
+void AMyCharacter::Falling()
+{
+	Super::Falling();
 
+	UE_LOG(GameLog, Log, TEXT("Character in air"));
 }

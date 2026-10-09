@@ -7,7 +7,7 @@
 #include "MyCharacter.generated.h"
 
 
-DECLARE_LOG_CATEGORY_EXTERN(GameLog, Log, All);
+
 
 class UInputMappingContext;
 class UInputAction;
@@ -15,7 +15,6 @@ class UInputComponent;
 class USpringArmComponent;
 class UCameraComponent;
 
-// --- New Code End ---
 
 
 UCLASS()
@@ -53,6 +52,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
 	TObjectPtr<UCameraComponent> ThirdPersonCamera;
+
+	virtual void Landed(const FHitResult& Hit) override;
+	virtual void Falling() override;
 
 
 public:	
