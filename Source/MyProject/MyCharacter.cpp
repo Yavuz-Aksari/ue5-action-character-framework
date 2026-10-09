@@ -7,6 +7,7 @@
 #include "InputActionValue.h"
 #include "InputMappingContext.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 DEFINE_LOG_CATEGORY(GameLog);
 
@@ -25,6 +26,10 @@ AMyCharacter::AMyCharacter()
 
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationRoll = false;
+	bUseControllerRotationYaw = false;
+
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
 
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -91,11 +96,14 @@ void AMyCharacter::Move(const FInputActionValue& Value)
 
 	if (Controller)
 	{
-		const FVector Move_Right = GetActorRightVector();
-		AddMovementInput(Move_Right, MovementValue.X);
+		const FRotator Rotation = Controller->GetControlRotation();
+		const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
+		
+		const FVector Right = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		AddMovementInput(Right, MovementValue.X);
 
-		const FVector Move_Forward = GetActorForwardVector();
-		AddMovementInput(Move_Forward, MovementValue.Y);
+		const FVector Forward = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+		AddMovementInput(Forward, MovementValue.Y);
 	}
 }
 
