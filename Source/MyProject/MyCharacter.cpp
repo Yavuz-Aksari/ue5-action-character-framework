@@ -31,7 +31,6 @@ AMyCharacter::AMyCharacter()
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
 	GetCharacterMovement()->AirControl = 0.2f;
 
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 }
@@ -55,24 +54,15 @@ void AMyCharacter::BeginPlay()
 		}
 		UE_LOG(GameLog, Error, TEXT("InputMapping is null: assign IMC in Blueprint."));
 	}
-
-	UE_LOG(GameLog, Log, TEXT("Character Sucsessfully spawned."));
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("We are using MyCharacter."));
-
-
-	
-	
 }
 
 
 void AMyCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
-// Called to bind functionality to input
-// Called to bind functionality to input
+
 void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 
@@ -80,6 +70,8 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	{
 	
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AMyCharacter::Move);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &AMyCharacter::StopMoving);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Canceled, this, &AMyCharacter::StopMoving);
 
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &AMyCharacter::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &AMyCharacter::StopJumping);
@@ -91,10 +83,40 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	}
 	
 }
+
+void AMyCharacter::ResolveMovementState(bool bForce)
+{
+	if (!bForce && CurrentMovementState == EMovementState::Dashing)
+	{
+		return;
+	}
+
+	if (GetCharacterMovement()->IsFalling())
+	{
+		SetMovementState(EMovementState::Falling);
+	}
+	else if (bIsMoveInputPressed)
+	{
+		SetMovementState(EMovementState::Walking);
+	}
+	else
+	{
+		SetMovementState(EMovementState::Idle);
+		
+	}
+}
+
 void AMyCharacter::Move(const FInputActionValue& Value)
 {
 
 	const FVector2D MovementValue = Value.Get<FVector2D>();
+
+	if (MovementValue.IsNearlyZero())
+	{
+		return;
+	}
+
+	bIsMoveInputPressed = true;
 
 	if (Controller)
 	{
@@ -107,6 +129,20 @@ void AMyCharacter::Move(const FInputActionValue& Value)
 		const FVector Forward = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 		AddMovementInput(Forward, MovementValue.Y);
 	}
+	ResolveMovementState(false);
+}
+
+void AMyCharacter::StopMoving(const FInputActionValue& Value)
+{
+	if (CurrentMovementState == EMovementState::Dashing)
+	{
+		return;
+	}
+	
+	bIsMoveInputPressed = false;
+
+	
+	ResolveMovementState(false);
 }
 
 void AMyCharacter::Look(const FInputActionValue& Value) {
@@ -120,18 +156,11 @@ void AMyCharacter::Look(const FInputActionValue& Value) {
 	}
 }
 
-void AMyCharacter::Landed(const FHitResult& Hit)
+void AMyCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
 {
-	Super::Landed(Hit);
+	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
 
-	UE_LOG(GameLog, Log, TEXT("Character Landed"));
-}
-
-void AMyCharacter::Falling()
-{
-	Super::Falling();
-
-	UE_LOG(GameLog, Log, TEXT("Character in air"));
+	ResolveMovementState(false);
 }
 
 void AMyCharacter::Dash()
@@ -154,8 +183,48 @@ void AMyCharacter::Dash()
 
 	FVector LaunchVelocity = DashDirection * AppliedForce;
 	LaunchCharacter(LaunchVelocity, true, true);
+	SetMovementState(EMovementState::Dashing);
+	GetWorld()->GetTimerManager().SetTimer(DashTimerHandle, this, &AMyCharacter::StopDashing, 0.2f, false);
 
 	LastDashTime = CurrentTime;
 
-	UE_LOG(GameLog, Log, TEXT("Dashed! (%s)"), *DashType);
+}
+
+void AMyCharacter::SetMovementState(EMovementState NewState)
+{
+	//Don't bother changing the state if its already in the same state.
+	if (CurrentMovementState == NewState)
+	{
+		return;
+	}
+
+	
+	FString OldStateName = UEnum::GetValueAsString(CurrentMovementState);
+	FString NewStateName = UEnum::GetValueAsString(NewState);
+
+	UE_LOG(GameLog, Log, TEXT("State Changed: %s -> %s"), *OldStateName, *NewStateName);
+
+	CurrentMovementState = NewState;
+}
+
+void AMyCharacter::SetActionState(EActionState NewState)
+{
+	//Don't bother changing the state if its already in the same state.
+	if (CurrentActionState == NewState)
+	{
+		return;
+	}
+
+
+	FString OldStateName = UEnum::GetValueAsString(CurrentActionState);
+	FString NewStateName = UEnum::GetValueAsString(NewState);
+
+	UE_LOG(GameLog, Log, TEXT("State Changed: %s -> %s"), *OldStateName, *NewStateName);
+
+	CurrentActionState = NewState;
+}
+
+void AMyCharacter::StopDashing()
+{
+	ResolveMovementState(true);
 }
