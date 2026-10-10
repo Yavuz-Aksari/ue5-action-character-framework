@@ -86,6 +86,8 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMyCharacter::Look);
 
+		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Triggered, this, &AMyCharacter::Dash);
+
 	}
 	
 }
@@ -130,4 +132,30 @@ void AMyCharacter::Falling()
 	Super::Falling();
 
 	UE_LOG(GameLog, Log, TEXT("Character in air"));
+}
+
+void AMyCharacter::Dash()
+{
+	float CurrentTime = GetWorld()->GetTimeSeconds();
+	if (CurrentTime < LastDashTime + DashCooldown){
+	
+		UE_LOG(GameLog, Log, TEXT("Dash still on cooldown: %f"), (LastDashTime + DashCooldown) - CurrentTime);
+		return;
+	}
+
+	FVector DashDirection = GetCharacterMovement()->GetLastInputVector();
+	FString DashType = GetCharacterMovement()->IsFalling() ? TEXT("Air") : TEXT("Ground");
+	float AppliedForce = GetCharacterMovement()->IsFalling() ? DashForce_air : DashForce_ground;
+
+	if (DashDirection.IsNearlyZero())
+	{
+		DashDirection = GetActorForwardVector();
+	}
+
+	FVector LaunchVelocity = DashDirection * AppliedForce;
+	LaunchCharacter(LaunchVelocity, true, true);
+
+	LastDashTime = CurrentTime;
+
+	UE_LOG(GameLog, Log, TEXT("Dashed! (%s)"), *DashType);
 }

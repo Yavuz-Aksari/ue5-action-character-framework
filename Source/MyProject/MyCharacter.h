@@ -27,25 +27,32 @@ public:
 	AMyCharacter();
 	UFUNCTION()
 	void Move(const FInputActionValue& Value);
+	
 	void Look(const FInputActionValue& Value);
+	
+	virtual void Landed(const FHitResult& Hit) override;
+	virtual void Falling() override;
+
+	float LastDashTime = 0.0f;
+	void Dash();
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputMappingContext>InputMapping;
 
-	// Move Input Actions
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> MoveAction;
 
-	// Jump Input Actions
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> JumpAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> LookAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
+	TObjectPtr<UInputAction> DashAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
 	TObjectPtr<USpringArmComponent> SpringArm;
@@ -53,8 +60,16 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
 	TObjectPtr<UCameraComponent> ThirdPersonCamera;
 
-	virtual void Landed(const FHitResult& Hit) override;
-	virtual void Falling() override;
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float DashForce_ground = 1500.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float DashForce_air = 10.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float DashCooldown = 1.5f;
+
+	
 
 
 public:	
