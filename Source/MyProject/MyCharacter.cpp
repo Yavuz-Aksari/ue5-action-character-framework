@@ -80,6 +80,11 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Started, this, &AMyCharacter::Dash);
 
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &AMyCharacter::Attack);
+		EnhancedInputComponent->BindAction(ParryAction, ETriggerEvent::Started, this, &AMyCharacter::Parry);
+
+
+
 	}
 	
 }
@@ -291,4 +296,39 @@ void AMyCharacter::SetActionState(EActionState NewState)
 void AMyCharacter::StopDashing()
 {
 	ResolveMovementState(true);
+}
+
+void AMyCharacter::Attack()
+{
+	if (!CanChangeActionState(EActionState::Attacking))
+	{
+		return; 
+	}
+
+	
+	SetActionState(EActionState::Attacking);
+
+	GetWorld()->GetTimerManager().SetTimer(AttackTimerHandle, this, &AMyCharacter::StopAttacking, 0.5f, false);
+}
+
+void AMyCharacter::StopAttacking()
+{
+	SetActionState(EActionState::None);
+}
+
+void AMyCharacter::Parry()
+{
+	if (!CanChangeActionState(EActionState::Parrying))
+	{
+		return;
+	}
+
+	SetActionState(EActionState::Parrying);
+
+	GetWorld()->GetTimerManager().SetTimer(ParryTimerHandle, this, &AMyCharacter::StopParrying, 0.3f, false);
+}
+
+void AMyCharacter::StopParrying()
+{
+	SetActionState(EActionState::None);
 }

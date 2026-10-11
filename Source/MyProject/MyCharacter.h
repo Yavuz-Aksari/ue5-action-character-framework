@@ -61,6 +61,12 @@ public:
 	void Dash();
 	void StopDashing();
 
+	void Attack();
+	void StopAttacking();
+
+	void Parry();
+	void StopParrying();
+
 	void SetMovementState(EMovementState NewState);
 	void SetActionState(EActionState NewState);
 	void ResolveMovementState(bool bforce = false);
@@ -86,6 +92,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
 	TObjectPtr<UInputAction> DashAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
+	TObjectPtr<UInputAction> ParryAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
+	TObjectPtr<UInputAction> AttackAction;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
 	TObjectPtr<USpringArmComponent> SpringArm;
 
@@ -108,6 +120,8 @@ protected:
 	EActionState CurrentActionState = EActionState::None;
 
 	FTimerHandle DashTimerHandle;
+	FTimerHandle AttackTimerHandle;
+	FTimerHandle ParryTimerHandle;
 
 	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode) override;
 	
