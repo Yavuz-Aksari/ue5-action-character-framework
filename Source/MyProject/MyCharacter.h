@@ -65,6 +65,8 @@ public:
 	void SetActionState(EActionState NewState);
 	void ResolveMovementState(bool bforce = false);
 	bool bIsMoveInputPressed = false;
+	bool CanChangeMovementState(EMovementState NewState);
+	bool CanChangeActionState(EActionState NewState);
 
 protected:
 	virtual void BeginPlay() override;

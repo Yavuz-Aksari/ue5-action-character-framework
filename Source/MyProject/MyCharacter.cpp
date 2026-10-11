@@ -78,7 +78,7 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMyCharacter::Look);
 
-		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Triggered, this, &AMyCharacter::Dash);
+		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Started, this, &AMyCharacter::Dash);
 
 	}
 	
@@ -104,6 +104,57 @@ void AMyCharacter::ResolveMovementState(bool bForce)
 		SetMovementState(EMovementState::Idle);
 		
 	}
+}
+
+bool AMyCharacter::CanChangeMovementState(EMovementState NewState)
+{
+	switch (NewState)
+	{
+	case EMovementState::Dashing:
+		if (CurrentMovementState == EMovementState::Falling)
+		{
+			UE_LOG(GameLog, Warning, TEXT("Dash	denied (Reason: Falling)"));
+			return false;
+		}
+		break;
+
+	default:
+		break;
+	}
+
+	return true;
+}
+
+bool AMyCharacter::CanChangeActionState(EActionState NewState)
+{
+	switch (NewState)
+	{
+	case EActionState::Attacking:
+		if (CurrentMovementState == EMovementState::Falling)
+		{
+			UE_LOG(GameLog, Warning, TEXT("Attack denied (Reason: Falling)"));
+			return false;
+		}
+		if (CurrentMovementState == EMovementState::Dashing)
+		{
+			UE_LOG(GameLog, Warning, TEXT("Attack denied (Reason: Dashing)"));
+			return false;
+		}
+		break;
+
+	case EActionState::Parrying:
+		if (CurrentMovementState == EMovementState::Dashing)
+		{
+			UE_LOG(GameLog, Warning, TEXT("Parry denied (Reason: Dashing)"));
+			return false;
+		}
+		break;
+
+	default:
+		break;
+	}
+
+	return true;
 }
 
 void AMyCharacter::Move(const FInputActionValue& Value)
@@ -165,6 +216,11 @@ void AMyCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 P
 
 void AMyCharacter::Dash()
 {
+	if (!CanChangeMovementState(EMovementState::Dashing))
+	{
+		return;
+	}
+	
 	float CurrentTime = GetWorld()->GetTimeSeconds();
 	if (CurrentTime < LastDashTime + DashCooldown){
 	
@@ -198,6 +254,10 @@ void AMyCharacter::SetMovementState(EMovementState NewState)
 		return;
 	}
 
+	if (!CanChangeMovementState(NewState))
+	{
+		return;
+	}
 	
 	FString OldStateName = UEnum::GetValueAsString(CurrentMovementState);
 	FString NewStateName = UEnum::GetValueAsString(NewState);
@@ -215,6 +275,10 @@ void AMyCharacter::SetActionState(EActionState NewState)
 		return;
 	}
 
+	if (!CanChangeActionState(NewState))
+	{
+		return;
+	}
 
 	FString OldStateName = UEnum::GetValueAsString(CurrentActionState);
 	FString NewStateName = UEnum::GetValueAsString(NewState);
